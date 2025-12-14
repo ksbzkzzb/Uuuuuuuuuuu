@@ -1,1 +1,374 @@
 
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Panel - Send Likes Bot</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <style>
+        body {
+            background-color: #0f172a;
+            background-image: 
+                radial-gradient(at 0% 0%, hsla(253, 16%, 7%, 1) 0, transparent 50%),
+                radial-gradient(at 50% 0%, hsla(225, 39%, 30%, 1) 0, transparent 50%);
+        }
+        
+        .glass-panel {
+            background: rgba(30, 41, 59, 0.7);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+        }
+    </style>
+</head>
+<body class="min-h-screen text-slate-200 p-4 md:p-6">
+    <!-- Login Screen -->
+    <div id="loginScreen" class="flex items-center justify-center min-h-screen">
+        <div class="glass-panel rounded-2xl p-8 w-full max-w-md">
+            <div class="text-center mb-8">
+                <h1 class="text-3xl font-bold mb-2 bg-clip-text text-transparent bg-gradient-to-r from-indigo-400 to-cyan-400">
+                    Admin Login
+                </h1>
+                <p class="text-slate-400">Access the coupon management system</p>
+            </div>
+            
+            <form id="loginForm" class="space-y-6">
+                <div>
+                    <label class="block text-sm font-semibold text-indigo-300 mb-2">Username</label>
+                    <input type="text" id="username" class="w-full px-4 py-3 rounded-xl bg-slate-800/50 border border-slate-700 text-white" 
+                           placeholder="Enter username" required>
+                </div>
+                
+                <div>
+                    <label class="block text-sm font-semibold text-indigo-300 mb-2">Password</label>
+                    <input type="password" id="password" class="w-full px-4 py-3 rounded-xl bg-slate-800/50 border border-slate-700 text-white" 
+                           placeholder="Enter password" required>
+                </div>
+                
+                <button type="submit" class="w-full bg-gradient-to-r from-indigo-600 to-purple-600 text-white font-semibold py-3 rounded-xl hover:opacity-90 transition-opacity">
+                    Login
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Admin Dashboard (Hidden by default) -->
+    <div id="dashboard" class="hidden">
+        <!-- Navbar -->
+        <nav class="glass-panel rounded-xl p-4 mb-6 flex justify-between items-center">
+            <div class="flex items-center gap-3">
+                <div class="bg-gradient-to-br from-indigo-500 to-purple-600 p-2 rounded-lg">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/>
+                    </svg>
+                </div>
+                <div>
+                    <h1 class="text-xl font-bold">Coupon Management</h1>
+                    <p class="text-sm text-slate-400" id="adminUsername">Welcome, Admin</p>
+                </div>
+            </div>
+            <button id="logoutBtn" class="px-4 py-2 bg-red-500/20 text-red-400 border border-red-500/30 rounded-lg hover:bg-red-500/30 transition-colors">
+                Logout
+            </button>
+        </nav>
+
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <!-- Create Coupons Form -->
+            <div class="glass-panel rounded-2xl p-6 lg:col-span-1">
+                <h2 class="text-xl font-bold mb-4">Create Coupons</h2>
+                <form id="createCouponForm" class="space-y-4">
+                    <div>
+                        <label class="block text-sm text-slate-400 mb-2">Prefix</label>
+                        <input type="text" id="prefix" value="LIKES" class="w-full px-4 py-3 rounded-lg bg-slate-800/50 border border-slate-700">
+                    </div>
+                    
+                    <div>
+                        <label class="block text-sm text-slate-400 mb-2">Number of Coupons</label>
+                        <input type="number" id="count" min="1" max="100" value="5" class="w-full px-4 py-3 rounded-lg bg-slate-800/50 border border-slate-700">
+                    </div>
+                    
+                    <div>
+                        <label class="block text-sm text-slate-400 mb-2">Likes per Coupon</label>
+                        <input type="number" id="likes" min="100" max="10000" value="1000" class="w-full px-4 py-3 rounded-lg bg-slate-800/50 border border-slate-700">
+                    </div>
+                    
+                    <div>
+                        <label class="block text-sm text-slate-400 mb-2">Expires After (days)</label>
+                        <input type="number" id="expires" min="1" placeholder="Optional" class="w-full px-4 py-3 rounded-lg bg-slate-800/50 border border-slate-700">
+                    </div>
+                    
+                    <button type="submit" class="w-full bg-gradient-to-r from-green-600 to-emerald-600 text-white font-semibold py-3 rounded-lg hover:opacity-90 transition-opacity">
+                        Generate Coupons
+                    </button>
+                </form>
+            </div>
+
+            <!-- Coupons List -->
+            <div class="glass-panel rounded-2xl p-6 lg:col-span-2">
+                <div class="flex justify-between items-center mb-6">
+                    <h2 class="text-xl font-bold">Generated Coupons</h2>
+                    <button id="refreshBtn" class="px-4 py-2 bg-indigo-500/20 text-indigo-400 border border-indigo-500/30 rounded-lg hover:bg-indigo-500/30 transition-colors">
+                        Refresh
+                    </button>
+                </div>
+                
+                <div class="overflow-x-auto">
+                    <table class="w-full">
+                        <thead class="bg-slate-800/50">
+                            <tr>
+                                <th class="p-3 text-left">Code</th>
+                                <th class="p-3 text-left">Likes</th>
+                                <th class="p-3 text-left">Status</th>
+                                <th class="p-3 text-left">Created</th>
+                                <th class="p-3 text-left">Expires</th>
+                                <th class="p-3 text-left">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="couponsTable">
+                            <!-- Filled by JavaScript -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Stats Section -->
+        <div class="glass-panel rounded-2xl p-6 mt-6">
+            <h2 class="text-xl font-bold mb-4">Statistics</h2>
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                <div class="bg-slate-800/50 rounded-xl p-4">
+                    <div class="text-sm text-slate-400">Total Coupons</div>
+                    <div class="text-2xl font-bold" id="totalCoupons">0</div>
+                </div>
+                <div class="bg-slate-800/50 rounded-xl p-4">
+                    <div class="text-sm text-slate-400">Active Coupons</div>
+                    <div class="text-2xl font-bold" id="activeCoupons">0</div>
+                </div>
+                <div class="bg-slate-800/50 rounded-xl p-4">
+                    <div class="text-sm text-slate-400">Used Coupons</div>
+                    <div class="text-2xl font-bold" id="usedCoupons">0</div>
+                </div>
+                <div class="bg-slate-800/50 rounded-xl p-4">
+                    <div class="text-sm text-slate-400">Total Likes</div>
+                    <div class="text-2xl font-bold" id="totalLikes">0</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let authToken = localStorage.getItem('admin_token');
+        
+        // Check if already logged in
+        if (authToken) {
+            showDashboard();
+            loadCoupons();
+        }
+
+        // Login form
+        document.getElementById('loginForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+            
+            try {
+                const response = await fetch('/api/admin/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ username, password })
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    authToken = data.token;
+                    localStorage.setItem('admin_token', authToken);
+                    document.getElementById('adminUsername').textContent = `Welcome, ${data.user.username}`;
+                    showDashboard();
+                    loadCoupons();
+                } else {
+                    Swal.fire({
+                        title: 'Login Failed',
+                        text: data.error || 'Invalid credentials',
+                        icon: 'error',
+                        background: '#1e293b',
+                        color: '#e2e8f0'
+                    });
+                }
+            } catch (error) {
+                Swal.fire({
+                    title: 'Error',
+                    text: 'Network error',
+                    icon: 'error',
+                    background: '#1e293b',
+                    color: '#e2e8f0'
+                });
+            }
+        });
+
+        // Create coupon form
+        document.getElementById('createCouponForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const prefix = document.getElementById('prefix').value;
+            const count = parseInt(document.getElementById('count').value);
+            const likes = parseInt(document.getElementById('likes').value);
+            const expires = document.getElementById('expires').value;
+            
+            try {
+                const response = await fetch('/api/admin/coupons', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${authToken}`
+                    },
+                    body: JSON.stringify({
+                        prefix,
+                        count,
+                        likes_count: likes,
+                        expires_days: expires ? parseInt(expires) : null
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    Swal.fire({
+                        title: 'Success!',
+                        html: `Created ${data.coupons.length} coupon(s)<br><br><code class="bg-slate-800 p-2 rounded">${data.coupons.join('<br>')}</code>`,
+                        icon: 'success',
+                        background: '#1e293b',
+                        color: '#e2e8f0',
+                        width: 600
+                    });
+                    
+                    // Clear form
+                    document.getElementById('count').value = 5;
+                    document.getElementById('expires').value = '';
+                    
+                    loadCoupons();
+                } else {
+                    Swal.fire({
+                        title: 'Error',
+                        text: data.error,
+                        icon: 'error',
+                        background: '#1e293b',
+                        color: '#e2e8f0'
+                    });
+                }
+            } catch (error) {
+                Swal.fire({
+                    title: 'Error',
+                    text: 'Network error',
+                    icon: 'error',
+                    background: '#1e293b',
+                    color: '#e2e8f0'
+                });
+            }
+        });
+
+        // Load coupons
+        async function loadCoupons() {
+            try {
+                const response = await fetch('/api/admin/coupons', {
+                    headers: {
+                        'Authorization': `Bearer ${authToken}`
+                    }
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    renderCoupons(data.coupons);
+                    updateStats(data.coupons);
+                }
+            } catch (error) {
+                console.error('Failed to load coupons:', error);
+            }
+        }
+
+        // Render coupons table
+        function renderCoupons(coupons) {
+            const table = document.getElementById('couponsTable');
+            table.innerHTML = '';
+            
+            coupons.forEach(coupon => {
+                const row = document.createElement('tr');
+                row.className = 'border-b border-slate-800/50 hover:bg-slate-800/30';
+                
+                const statusColor = coupon.status === 'active' ? 'text-green-400' : 
+                                  coupon.status === 'used' ? 'text-yellow-400' : 'text-red-400';
+                
+                const expiresDate = coupon.expires_at ? 
+                    new Date(coupon.expires_at).toLocaleDateString() : 'Never';
+                
+                row.innerHTML = `
+                    <td class="p-3 font-mono text-sm">${coupon.code}</td>
+                    <td class="p-3">${coupon.likes_count.toLocaleString()}</td>
+                    <td class="p-3"><span class="px-2 py-1 rounded ${statusColor} bg-slate-800/50">${coupon.status}</span></td>
+                    <td class="p-3 text-sm">${new Date(coupon.created_at).toLocaleDateString()}</td>
+                    <td class="p-3 text-sm">${expiresDate}</td>
+                    <td class="p-3">
+                        <button onclick="copyCode('${coupon.code}')" class="px-3 py-1 bg-blue-500/20 text-blue-400 rounded text-sm hover:bg-blue-500/30">
+                            Copy
+                        </button>
+                    </td>
+                `;
+                
+                table.appendChild(row);
+            });
+        }
+
+        // Update statistics
+        function updateStats(coupons) {
+            const total = coupons.length;
+            const active = coupons.filter(c => c.status === 'active').length;
+            const used = coupons.filter(c => c.status === 'used').length;
+            const totalLikes = coupons.reduce((sum, c) => sum + c.likes_count, 0);
+            
+            document.getElementById('totalCoupons').textContent = total;
+            document.getElementById('activeCoupons').textContent = active;
+            document.getElementById('usedCoupons').textContent = used;
+            document.getElementById('totalLikes').textContent = totalLikes.toLocaleString();
+        }
+
+        // Copy code function
+        window.copyCode = function(code) {
+            navigator.clipboard.writeText(code).then(() => {
+                Swal.fire({
+                    title: 'Copied!',
+                    text: `Code: ${code}`,
+                    icon: 'success',
+                    timer: 1500,
+                    showConfirmButton: false,
+                    background: '#1e293b',
+                    color: '#e2e8f0'
+                });
+            });
+        };
+
+        // Refresh button
+        document.getElementById('refreshBtn').addEventListener('click', loadCoupons);
+
+        // Logout button
+        document.getElementById('logoutBtn').addEventListener('click', () => {
+            localStorage.removeItem('admin_token');
+            authToken = null;
+            hideDashboard();
+        });
+
+        // Helper functions
+        function showDashboard() {
+            document.getElementById('loginScreen').classList.add('hidden');
+            document.getElementById('dashboard').classList.remove('hidden');
+        }
+
+        function hideDashboard() {
+            document.getElementById('loginScreen').classList.remove('hidden');
+            document.getElementById('dashboard').classList.add('hidden');
+        }
+    </script>
+</body>
+                          </html>
